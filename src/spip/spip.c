@@ -134,9 +134,17 @@ spip_iface_read(spip_iface_t *iface, struct spip_pdu **pdu)
           if (computed_crc != crc) {
             /* Bad CRC. Sync again */
             spip_ctx_resync(self);
-#ifdef __SAM4CMS16C_0__
+#ifdef ERROR_REPORTING
+#  ifdef __SAM4CMS16C_0__
             lcd_printf(1, "HDR!%08x", computed_crc);
-#endif
+#  else
+            fprintf(
+              stderr,
+              "\033[0;31mBroken SPIP (UART) message (header CRC: %08x != %08x)\033[0m\r",
+              crc,
+              computed_crc);
+#  endif /* __SAM4CMS16C_0__ */
+#endif /* ERROR_REPORTING */
             state = SPIP_LOOP_STATE_SYNCING;
           } else {
             i = SPIP_HEADER_SIZE;
@@ -155,7 +163,7 @@ spip_iface_read(spip_iface_t *iface, struct spip_pdu **pdu)
         if (updu.pdu_data != NULL)
           updu.pdu_data[i++] = c;
 
-        if (i == self->pdu.size + SPIP_HEADER_SIZE) {
+        if (i == (unsigned) self->pdu.size + SPIP_HEADER_SIZE) {
           if (updu.pdu_data != NULL) {
             crc = updu.pdu_s->crc;
             updu.pdu_s->crc = 0;
@@ -165,9 +173,11 @@ spip_iface_read(spip_iface_t *iface, struct spip_pdu **pdu)
               *pdu = updu.pdu_s;
               return TRUE;
             }
-#ifdef __SAM4CMS16C_0__
+#ifdef ERROR_REPORTING
+#  ifdef __SAM4CMS16C_0__
             lcd_printf(1, "BDY!%08x", computed_crc);
-#endif
+#  endif /* __SAM4CMS16C_0__ */
+#endif /* ERROR_REPORTING */
           }
 
           spip_ctx_resync(self);
@@ -298,9 +308,6 @@ spip_iface_lcd_printf(
   fullmsg[16] = '\0';
 
   ok = spip_iface_set_lcd(iface, row, fullmsg);
-
-fail:
-  va_end(ap);
 
   return ok;
 }

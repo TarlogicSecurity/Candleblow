@@ -31,6 +31,7 @@
 /* Example Includes */
 #include "conf_app_example.h"
 
+void tx_msg_init(void);
 void hang(void);
 
 #endif /* BOOT_H_ */

@@ -13,6 +13,8 @@
 
 #include <defs.h>
 
-void app_entry(void *);
+struct tx_task;
+
+void app_entry(struct tx_task *);
 
 #endif /* APP_H_ */

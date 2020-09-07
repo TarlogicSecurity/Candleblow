@@ -14,7 +14,6 @@
 #include <ctype.h>
 #include <boot.h>
 #include <lcd.h>
-
 #include <spip.h>
 
 static spip_iface_t si;
@@ -27,7 +26,7 @@ on_phy_data(void *data, const uint8_t *buffer, size_t size)
 }
 
 void
-app_entry(void *unused)
+app_entry(struct tx_task *tt)
 { 
   lcd_puts(0, "UART...");
   lcd_printf(1, "SPIP@%ld bd", CONSOLE_BAUDRATE);
@@ -41,7 +40,7 @@ app_entry(void *unused)
   LED_Off(LED1);
   
   lcd_puts(0, "Probe ready! :)");
-  spip_iface_board_loop(&si);
-  
+  spip_iface_board_loop(&si, tt);
+  lcd_puts(0, "HANG!!");
   hang();
 }

@@ -11,6 +11,11 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+void vApplicationMallocFailedHook(void);
+void vApplicationIdleHook(void);
+void vApplicationStackOverflowHook(xTaskHandle pxTask, signed char *pcTaskName);
+void vApplicationTickHook(void);
+
 /*-----------------------------------------------------------*/
 void vApplicationMallocFailedHook( void )
 {

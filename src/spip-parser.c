@@ -10,13 +10,16 @@
 #include "spip.h"
 #include <led.h>
 #include <lcd.h>
+#include <tx-task.h>
 
 static BOOL 
 on_pdu(spip_iface_t *iface, struct spip_pdu *pdu, void *userdata)
 {
+  tx_task_t *tt = (tx_task_t *) userdata;
+  
   switch (pdu->command) {
     case SPIP_COMMAND_FRAME:
-      /* TODO: Inject frame */
+      tx_task_push_frame(tt, pdu->data, pdu->size);
       break;
       
     case SPIP_COMMAND_LCD:
@@ -55,7 +58,7 @@ on_pdu(spip_iface_t *iface, struct spip_pdu *pdu, void *userdata)
 }
 
 BOOL
-spip_iface_board_loop(spip_iface_t *iface)
+spip_iface_board_loop(spip_iface_t *iface, tx_task_t *tt)
 {
-  return spip_iface_loop(iface, on_pdu, NULL);
+  return spip_iface_loop(iface, on_pdu, tt);
 }

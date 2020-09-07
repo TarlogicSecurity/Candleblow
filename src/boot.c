@@ -13,6 +13,7 @@
 #include <lcd.h>
 
 #include <phy.h>
+#include <tx-task.h>
 #include "boot.h"
 
 /****************************** Boot parameters ****************************/
@@ -28,8 +29,19 @@ static xTaskHandle app_task_handle;
 void
 hang(void)
 {
-  printf("\nHanging now...\n");
-  for(;;);  
+  unsigned int cntr = 0xffffff;
+  volatile unsigned int i;
+  
+  lcd_puts(0, "panic: hang");
+  
+  LED_Off(LED0);
+  
+  for(;;) {
+    LED_Toggle(LED1);
+    i = cntr;
+    while (--i);
+    wdt_restart(WDT);
+  }
 }
 
 #include <sys/time.h>
@@ -109,13 +121,20 @@ sched_init(void)
 static void
 app_init(void)
 {
-  xTaskCreate(
-    app_entry,
-    (const signed char *const) "APP",
-    TASK_APP_STACK,
-    NULL,
-    tskIDLE_PRIORITY + 1,
-    &app_task_handle);
+  static tx_task_t tt;
+  
+  if (tx_task_init(&tt)) {
+    xTaskCreate(
+      app_entry,
+      (const signed char *const) "APP",
+      TASK_APP_STACK,
+      &tt,
+      tskIDLE_PRIORITY + 1,
+      &app_task_handle);
+  } else {
+    lcd_puts(0, "TX init fail");
+    hang();
+  }   
 }
   
 static void

@@ -25,7 +25,6 @@ static BOOL
 spip_uart_read_byte(void *unused, uint8_t *c)
 {
   *c = console_getchar();
-  console_putchar(*c);
   return TRUE;
 }
 

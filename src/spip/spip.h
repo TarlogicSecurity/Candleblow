@@ -82,7 +82,7 @@ BOOL spip_iface_lcd_printf(
     spip_iface_t *iface,
     uint8_t row,
     const char *fmt,
-    ...);
+    ...) __attribute__((gnu_printf));
 
 /* System-specific methods */
 BOOL spip_interface_open_serial(
@@ -92,7 +92,9 @@ BOOL spip_interface_open_serial(
 BOOL spip_interface_open_pipe(spip_iface_t *iface);
 BOOL spip_uart_interface_init(spip_iface_t *iface);
 
+struct tx_task;
+
 BOOL spip_iface_emulator_loop(spip_iface_t *iface);
-BOOL spip_iface_board_loop(spip_iface_t *iface);
+BOOL spip_iface_board_loop(spip_iface_t *iface, struct tx_task *);
 
 #endif /* SPIP_SPIP_H_ */

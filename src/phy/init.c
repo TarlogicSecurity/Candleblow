@@ -14,6 +14,7 @@
 
 #include <boot.h>
 #include <ctype.h>
+#include <lcd.h>
 
 /************************** Phy layer parameters ****************************/
 #define ATPL360_BINARY_ADDRESS                     0x010E0000
@@ -125,11 +126,23 @@ static xTaskHandle phy_task_handle;
 /********************************** API *************************************/
 extern phy_rx_handler_t rx_handler;
 extern void *rx_handler_userdata;
+static BOOL sb_pending_except;
+
+BOOL
+phy_tx_take_exception(void)
+{
+  BOOL ret = sb_pending_except;
+  
+  sb_pending_except = FALSE;
+  
+  return ret;
+}
 
 static void 
 _tx_result_handler(tx_cfm_t *px_tx_result)
 {
-  
+  if (px_tx_result->uc_tx_result != TX_RESULT_SUCCESS)
+    lcd_printf(1, "TX ERROR: %d", px_tx_result->uc_tx_result);
 }
 
 static void 
@@ -149,7 +162,21 @@ _error_handler(atpl360_exception_t exception)
   }
 
   LED_On(LED1);
+  sb_pending_except = TRUE;
 }
+
+#if defined (__CC_ARM)
+  extern uint8_t atpl_bin_start[];
+  extern uint8_t atpl_bin_end[];
+#elif defined (__GNUC__)
+  extern uint8_t atpl_bin_start;
+  extern uint8_t atpl_bin_end;
+#elif defined (__ICCARM__)
+#  pragma section = "P_atpl_bin"
+  extern uint8_t atpl_bin;
+#else
+#  error This compiler is not supported for now.
+#endif
 
 static uint32_t 
 _get_pl360_bin_addressing(uint32_t *pul_address)
@@ -159,20 +186,14 @@ _get_pl360_bin_addressing(uint32_t *pul_address)
   uint8_t *puc_bin_end;
 
 #if defined (__CC_ARM)
-  extern uint8_t atpl_bin_start[];
-  extern uint8_t atpl_bin_end[];
   ul_bin_addr = (int)(atpl_bin_start - 1);
   puc_bin_start = atpl_bin_start - 1;
   puc_bin_end = atpl_bin_end;
 #elif defined (__GNUC__)
-  extern uint8_t atpl_bin_start;
-  extern uint8_t atpl_bin_end;
-  ul_bin_addr = (int)&atpl_bin_start;
-  puc_bin_start = (int)&atpl_bin_start;
-  puc_bin_end = (int)&atpl_bin_end;
+  ul_bin_addr = (uint32_t) &atpl_bin_start;
+  puc_bin_start = (uint8_t *) &atpl_bin_start;
+  puc_bin_end = (uint8_t *) &atpl_bin_end;
 #elif defined (__ICCARM__)
-  #pragma section = "P_atpl_bin"
-  extern uint8_t atpl_bin;
   ul_bin_addr = (int)&atpl_bin;
   puc_bin_start = __section_begin("P_atpl_bin");
   puc_bin_end = __section_end("P_atpl_bin");
@@ -218,6 +239,29 @@ _configure_tx_coup_params(uint8_t uc_chn)
   sx_atpl360_desc.set_config(ATPL360_REG_PREDIST_COEF_TABLE_VLO, pus_equ_vlo, 97 << 1);
 }
 
+void
+phy_reset_params(void)
+{
+  uint8_t autodetect = 0;
+  uint8_t impedance = 2;
+  uint8_t channel = 1;
+  
+  /* Update channel */
+  sx_atpl360_desc.set_config(ATPL360_REG_CHANNEL_CFG, &channel, 1);
+  _configure_tx_coup_params(channel); /* TODO: Configure */
+
+  /* Update impedance */
+  sx_atpl360_desc.set_config(
+    ATPL360_REG_CFG_AUTODETECT_IMPEDANCE, 
+    &autodetect, 
+    1);
+    
+  sx_atpl360_desc.set_config(
+    ATPL360_REG_CFG_IMPEDANCE, 
+    &impedance, 
+    1); 
+}
+
 static void
 atpl360_low_level_init(void)
 {
@@ -226,8 +270,7 @@ atpl360_low_level_init(void)
   atpl360_dev_callbacks_t x_atpl360_cbs;
   atpl360_hal_wrapper_t x_atpl360_hal_wrp;
   uint8_t uc_ret;
-  uint8_t autodetect = 1;
-  uint8_t channel = 1;
+
   
   /* Init ATPL360 */
   x_atpl360_hal_wrp.plc_init = hal_plc_init;
@@ -254,13 +297,7 @@ atpl360_low_level_init(void)
     hang();
   }
 
-  /* Update channel */
-  sx_atpl360_desc.set_config(ATPL360_REG_CHANNEL_CFG, &channel, 1);
-  _configure_tx_coup_params(1); /* TODO: Configure */
-
-  /* Update impedance */
-  sx_atpl360_desc.set_config(ATPL360_REG_CFG_AUTODETECT_IMPEDANCE, &autodetect, 1);
-  // sx_atpl360_desc.set_config(ATPL360_REG_CFG_IMPEDANCE, &xTxPhyCfg.uc_impedance, 1);  
+  phy_reset_params();
 }
 
 static void
@@ -278,6 +315,15 @@ phy_task(void *params)
     vTaskDelayUntil(&xLastWakeTime, xPeriod);
     atpl360_handle_events();
   }
+}
+
+BOOL
+phy_send_data(tx_msg_t *template, const void *data, size_t size)
+{
+  template->puc_data_buf = (uint8_t *) data;
+  template->us_data_len = (uint16_t) size;
+  
+  return sx_atpl360_desc.send_data(template) == TX_RESULT_PROCESS;
 }
 
 void
