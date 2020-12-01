@@ -1042,14 +1042,6 @@
     <Compile Include="src\lcd\lcd.h">
       <SubType>compile</SubType>
     </Compile>
-    <None Include="phy_embedded_app.c">
-      <Link>src\phy_embedded_app.c</Link>
-      <SubType>compile</SubType>
-    </None>
-    <None Include="phy_tx_test_console.c">
-      <Link>src\phy_tx_test_console.c</Link>
-      <SubType>compile</SubType>
-    </None>
     <Compile Include="src\ASF\config\atpl_bin.S">
       <Link>src\ASF\thirdparty\prime_ng\phy\atpl360\apps\phy_tx_test_console\sam4cms16c_atpl360mb\atpl_bin.S</Link>
       <SubType>compile</SubType>
