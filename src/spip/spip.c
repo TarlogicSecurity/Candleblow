@@ -33,6 +33,7 @@
 #include <defs.h>
 #include <string.h>
 #include <stdarg.h>
+#include <led.h>
 
 #ifdef __SAM4CMS16C_0__
 #  include <lcd.h>
@@ -88,8 +89,11 @@ spip_ctx_sync(spip_ctx_t *self, uint8_t c)
       p = 0;
   }
 
-  if (syncbuf.sync == SPIP_FRAME_SYNC)
+  if (syncbuf.sync == SPIP_FRAME_SYNC) {
+	self->pdu.sync = syncbuf.sync;
+	self->p = 0;
     return TRUE;
+  }
 
   return FALSE;
 }
@@ -138,7 +142,6 @@ spip_iface_read(spip_iface_t *iface, struct spip_pdu **pdu)
           state = SPIP_LOOP_READING_HEADER;
           i = 8;
         }
-      
         break;
 
       case SPIP_LOOP_READING_HEADER:
@@ -152,7 +155,7 @@ spip_iface_read(spip_iface_t *iface, struct spip_pdu **pdu)
               NULL,
               self->header,
               SPIP_HEADER_SIZE);
-
+		  
           if (computed_crc != crc) {
             /* Bad CRC. Sync again */
             spip_ctx_resync(self);
@@ -205,6 +208,7 @@ spip_iface_read(spip_iface_t *iface, struct spip_pdu **pdu)
           spip_ctx_resync(self);
           state = SPIP_LOOP_STATE_SYNCING;
         }
+		
         break;
     }
   }

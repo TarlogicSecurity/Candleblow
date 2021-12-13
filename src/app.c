@@ -41,6 +41,14 @@
 
 static spip_iface_t si;
 
+static char rst_desc[5][5] = {
+	"GENR",
+	"BACK",
+	"WDT",
+	"SOFT",
+	"USER"
+};
+
 static void
 on_phy_data(void *data, const uint8_t *buffer, size_t size)
 {
@@ -63,6 +71,7 @@ app_entry(struct tx_task *tt)
   LED_Off(LED1);
   
   lcd_puts(0, "Probe ready! :)");
+  /* lcd_printf(1, "R:%ud", rstc_get_reset_cause(RSTC)); */
   spip_iface_board_loop(&si, tt);
   lcd_puts(0, "HANG!!");
   hang();

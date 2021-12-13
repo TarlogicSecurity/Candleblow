@@ -60,6 +60,7 @@ lcd_printf(int y, const char *fmt, ...)
   
   va_end(ap);
 }
+
 void
 lcd_puts(int y, const char *message)
 {
@@ -72,6 +73,14 @@ lcd_puts(int y, const char *message)
     0);
     
   c0216CiZ_show(message);
+}
+
+void
+lcd_puts_byte(int y, uint8_t byte)
+{
+	char hex[2];
+	sprintf(hex, "%02X", byte);
+	lcd_puts(y, hex);
 }
 
 void

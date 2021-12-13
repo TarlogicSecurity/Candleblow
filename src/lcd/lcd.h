@@ -38,5 +38,6 @@
 void lcd_init(void);
 void lcd_puts(int y, const char *msg);
 void lcd_printf(int y, const char *fmt, ...) __attribute__ ((format (gnu_printf, 2, 3)));
+void lcd_puts_byte(int y, uint8_t byte);
 
 #endif /* CONSOLE_CONSOLE_H */

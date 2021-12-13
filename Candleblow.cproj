@@ -308,7 +308,7 @@
         <documentation help="http://asf.atmel.com/docs/3.45.0/thirdparty.prime_ng.phy.atpl360.apps.phy_tx_test_console.sam4cms16c_atpl360mb/html/index.html" />
         <offline-documentation help="" />
         <dependencies>
-          <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.39.0" />
+          <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.44.0" />
         </dependencies>
         <project id="thirdparty.prime_ng.phy.atpl360.apps.phy_tx_test_console.sam4cms16c_atpl360mb" value="Add" config="" content-id="Atmel.ASF" />
         <board id="board.atpl360mb" value="Add" config="" content-id="Atmel.ASF" />
@@ -359,8 +359,7 @@
       <ToolNumber>4294967295</ToolNumber>
       <ToolName>J-Link</ToolName>
     </com_atmel_avrdbg_tool_samice>
-    <avrtoolinterface>
-    </avrtoolinterface>
+    <avrtoolinterface>JTAG</avrtoolinterface>
     <avrtoolinterfaceclock>4000000</avrtoolinterfaceclock>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">

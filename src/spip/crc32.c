@@ -31,6 +31,7 @@
  */
 
 #include <spip.h>
+#include <lcd.h>
 
 static uint32_t crc_table[] = {
   0x0,        0x4c11db7,  0x9823b6e,  0xd4326d9,
